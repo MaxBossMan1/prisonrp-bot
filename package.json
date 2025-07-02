@@ -18,9 +18,9 @@
   "author": "DigitalDeltaGaming",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^14.14.1",
-    "better-sqlite3": "^9.2.2",
-    "dotenv": "^16.3.1"
+    "discord.js": "^14.21.0",
+    "dotenv": "^16.6.1",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
@@ -28,4 +28,4 @@
   "engines": {
     "node": ">=18.0.0"
   }
-} 
+}

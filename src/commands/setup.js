@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -15,13 +15,13 @@ module.exports = {
             if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
                 await interaction.reply({ 
                     content: '❌ You need Administrator permissions to use this command.', 
-                    ephemeral: true 
+                    flags: MessageFlags.Ephemeral
                 });
                 return;
             }
 
             // Check if setup is already complete
-            const existingConfig = database.getAllConfig();
+            const existingConfig = await database.getAllConfig();
             const requiredConfigs = [
                 'staff_applications_forum_id',
                 'ban_appeals_forum_id', 
@@ -41,7 +41,7 @@ module.exports = {
                     .setDescription('The bot appears to already be configured. Use `/verify-setup` to check the current configuration or `/update-config` to modify settings.')
                     .setFooter({ text: 'Use /update-config to change existing settings' });
 
-                await interaction.reply({ embeds: [embed], ephemeral: true });
+                await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -49,7 +49,7 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setTitle('🔧 DigitalDeltaGaming PrisonRP Bot Setup')
                 .setColor(0x0099FF)
-                .setDescription('Welcome to the bot setup process! I\'ll guide you through configuring the bot for your server.\n\n**What you\'ll need:**\n• Staff Applications Forum Channel ID\n• Ban Appeals Forum Channel ID\n• Support & Reports Category ID\n• Bot Logs Channel ID\n• Staff Role ID\n• Admin Role ID (optional)')
+                .setDescription('Welcome to the bot setup process! I\'ll guide you through configuring the bot for your server.\n\n**What you\'ll need:**\n• Staff Applications Forum Channel ID\n• Ban Appeals Forum Channel ID\n• Support & Reports Category ID\n• Archive Category ID (optional)\n• Bot Logs Channel ID\n• Staff Role ID\n• Admin Role ID (optional)')
                 .addFields(
                     { 
                         name: '📋 How to get Channel/Role IDs', 
@@ -60,7 +60,7 @@ module.exports = {
                         value: 'I\'ll ask for each ID one by one. Type the ID when prompted, or type "skip" for optional items.' 
                     }
                 )
-                .setFooter({ text: 'This process will take about 2 minutes' });
+                .setFooter({ text: 'This process will take about 3 minutes' });
 
             await interaction.reply({ embeds: [embed] });
 
@@ -71,7 +71,7 @@ module.exports = {
             logger.error('Error in setup command:', error);
             await interaction.followUp({ 
                 content: '❌ An error occurred during setup. Please try again.', 
-                ephemeral: true 
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -95,6 +95,12 @@ module.exports = {
                 key: 'support_reports_category_id', 
                 prompt: '📁 Please provide the **Support & Reports Category ID**:',
                 validation: 'category'
+            },
+            { 
+                key: 'archive_category_id', 
+                prompt: '📦 Please provide the **Archive Category ID** (or type "skip" to delete closed tickets):',
+                validation: 'category',
+                optional: true
             },
             { 
                 key: 'bot_logs_channel_id', 
@@ -181,8 +187,11 @@ module.exports = {
             if (reason === 'completed') {
                 // Save all configurations
                 for (const [key, value] of Object.entries(responses)) {
-                    database.setConfig(key, value);
+                    await database.setConfig(key, value);
                 }
+                
+                // Set applications as open by default
+                await database.setConfig('staff_applications_open', 'true');
 
                 // Create success embed
                 const embed = new EmbedBuilder()
@@ -197,7 +206,7 @@ module.exports = {
                 await interaction.followUp({ embeds: [embed] });
 
                 // Log setup completion
-                database.insertBotLog('info', 'Bot setup completed', interaction.user.id, 'setup_completed', responses);
+                await database.insertBotLog('info', 'Bot setup completed', interaction.user.id, 'setup_completed', responses);
             }
         });
     },

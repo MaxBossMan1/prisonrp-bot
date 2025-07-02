@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js');
 const { config } = require('dotenv');
 const path = require('path');
 
@@ -20,6 +20,9 @@ class PrisonRPBot {
                 GatewayIntentBits.GuildMessages,
                 GatewayIntentBits.DirectMessages,
                 GatewayIntentBits.MessageContent
+            ],
+            partials: [
+                Partials.Channel // Required for DM handling
             ]
         });
 

@@ -34,7 +34,8 @@ const QA_FLOWS = {
             { key: 'banDate', question: 'When were you banned? (Date and approximate time)' },
             { key: 'banReason', question: 'What was the reason given for your ban?' },
             { key: 'appealReason', question: 'Why do you believe your ban should be lifted? (Please provide a detailed explanation)' },
-            { key: 'evidence', question: 'Do you have any evidence or additional information to support your appeal? (If yes, please provide links or details)' }
+            { key: 'evidence', question: 'Do you have any evidence or additional information to support your appeal? (Provide links, descriptions, or attach screenshots)' },
+            { key: 'attachments', question: 'Please attach any screenshots or evidence files now. Send them as attachments in your next message, or type "none" if you have no attachments.', allowAttachments: true }
         ],
         postType: 'forum', // Will be posted to ban appeals forum
         category: 'ban-appeals'
@@ -157,7 +158,11 @@ class QAFlowManager {
         const question = this.getQuestion(flowType, questionIndex);
         if (!question) return { valid: false, error: 'Invalid question' };
 
-        // Basic validation
+        // Basic validation (skip for attachment questions)
+        if (question.allowAttachments) {
+            return { valid: true }; // Attachment validation is handled in menuHandler
+        }
+        
         if (!answer || answer.trim().length === 0) {
             return { valid: false, error: 'Please provide an answer.' };
         }

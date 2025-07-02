@@ -61,22 +61,22 @@ async function testBot() {
         const db = new Database();
         
         // Test database initialization
-        db.initialize();
+        await db.init();
         console.log('   ✅ Database initialization');
         
         // Test basic operations
-        db.setConfig('test_key', 'test_value');
-        const testValue = db.getConfig('test_key');
-        if (testValue === 'test_value') {
+        await db.setConfig('test_key', 'test_value');
+        const testValue = await db.getConfig('test_key');
+        if (testValue?.value === 'test_value') {
             console.log('   ✅ Database read/write operations');
         } else {
             console.log('   ❌ Database read/write operations');
         }
         
         // Cleanup test data
-        db.deleteConfig('test_key');
+        await db.run('DELETE FROM bot_config WHERE key = ?', ['test_key']);
         
-        db.close();
+        await db.close();
     } catch (error) {
         console.log(`   ❌ Database test failed: ${error.message}`);
         filesPassed = false;

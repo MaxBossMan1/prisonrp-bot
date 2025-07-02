@@ -19,11 +19,11 @@ module.exports = {
             .addFields(
                 {
                     name: '👥 For Users',
-                    value: '• Use `/menu` to open the support menu in DM\n• Navigate using numbers or option names\n• Complete staff applications, appeals, and reports\n• Get help with server issues'
+                    value: '• Use `/menu` to open the support menu in DM\n• Navigate using numbers or option names\n• Complete staff applications, appeals, and reports\n• Reply to tickets by sending DMs to this bot\n• Attach files to your messages for evidence\n• Get help with server issues'
                 },
                 {
                     name: '🛠️ For Staff',
-                    value: '• Use `/accept` to approve applications/appeals\n• Use `/deny` to reject applications/appeals\n• Use `/close` to close support tickets\n• Use `/reopen` to reopen closed items'
+                    value: '• Use `/accept` to approve applications/appeals\n• Use `/deny` to reject applications/appeals\n• Use `/close` to close support tickets\n• Use `/reopen` to reopen closed items\n• Use `/list-tickets` to view active tickets\n• Use `/ticket-message` to communicate with users\n• Use `/ticket-help` for detailed ticket help'
                 },
                 {
                     name: '⚙️ For Administrators',
@@ -35,7 +35,7 @@ module.exports = {
             .addFields(
                 {
                     name: '📋 Available Commands',
-                    value: '`/menu` - Open support menu\n`/help` - Show this help\n`/setup` - Configure bot (Admin)\n`/verify-setup` - Check configuration'
+                    value: '`/menu` - Open support menu\n`/help` - Show this help\n`/setup` - Configure bot (Admin)\n`/verify-setup` - Check configuration\n`/ticket-help` - Ticket communication help\n`/list-tickets` - View tickets (Staff)\n`/ticket-message` - Send ticket reply (Staff)'
                 },
                 {
                     name: '🔧 Setup Status',

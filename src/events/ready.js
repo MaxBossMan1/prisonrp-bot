@@ -15,8 +15,8 @@ module.exports = {
         
         // Clean old sessions and logs on startup
         try {
-            const sessionsDeleted = database.cleanOldSessions();
-            const logsDeleted = database.cleanOldLogs();
+            const sessionsDeleted = await database.cleanOldSessions();
+            const logsDeleted = await database.cleanOldLogs();
             
             if (sessionsDeleted.changes > 0) {
                 logger.info(`Cleaned ${sessionsDeleted.changes} old sessions`);
@@ -30,7 +30,7 @@ module.exports = {
         }
         
         // Log startup to database
-        database.insertBotLog('info', 'Bot started successfully', null, 'bot_startup', {
+        await database.insertBotLog('info', 'Bot started successfully', null, 'bot_startup', {
             guilds: client.guilds.cache.size,
             users: client.users.cache.size
         });

@@ -1,4 +1,4 @@
-const Database = require('better-sqlite3');
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
@@ -9,32 +9,51 @@ class BotDatabase {
     }
 
     async init() {
-        try {
-            // Ensure data directory exists
-            const dir = path.dirname(this.dbPath);
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
+        return new Promise((resolve, reject) => {
+            try {
+                // Ensure data directory exists
+                const dir = path.dirname(this.dbPath);
+                if (!fs.existsSync(dir)) {
+                    fs.mkdirSync(dir, { recursive: true });
+                }
 
-            // Initialize database
-            this.db = new Database(this.dbPath);
-            this.db.pragma('foreign_keys = ON');
-            
-            // Create tables
-            this.createTables();
-            this.createIndexes();
-            
-            console.log('Database initialized successfully');
-        } catch (error) {
-            console.error('Failed to initialize database:', error);
-            throw error;
-        }
+                // Initialize database
+                this.db = new sqlite3.Database(this.dbPath, (err) => {
+                    if (err) {
+                        console.error('Failed to connect to database:', err);
+                        reject(err);
+                        return;
+                    }
+                    
+                    // Enable foreign keys
+                    this.db.run('PRAGMA foreign_keys = ON', (err) => {
+                        if (err) {
+                            console.error('Failed to enable foreign keys:', err);
+                            reject(err);
+                            return;
+                        }
+                        
+                        // Create tables
+                        this.createTables()
+                            .then(() => this.createIndexes())
+                            .then(() => {
+                                console.log('Database initialized successfully');
+                                resolve();
+                            })
+                            .catch(reject);
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to initialize database:', error);
+                reject(error);
+            }
+        });
     }
 
-    createTables() {
-        // User Sessions Table
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS user_sessions (
+    async createTables() {
+        const tables = [
+            // User Sessions Table
+            `CREATE TABLE IF NOT EXISTS user_sessions (
                 user_id TEXT PRIMARY KEY,
                 current_menu TEXT DEFAULT 'main',
                 current_flow TEXT,
@@ -42,12 +61,10 @@ class BotDatabase {
                 answers TEXT,
                 last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        // Applications Table
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS applications (
+            )`,
+            
+            // Applications Table
+            `CREATE TABLE IF NOT EXISTS applications (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 type TEXT NOT NULL,
@@ -58,14 +75,11 @@ class BotDatabase {
                 submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 reviewed_by TEXT,
                 reviewed_at DATETIME,
-                review_reason TEXT,
-                FOREIGN KEY (user_id) REFERENCES user_sessions(user_id)
-            )
-        `);
-
-        // Support Tickets Table
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS tickets (
+                review_reason TEXT
+            )`,
+            
+            // Support Tickets Table
+            `CREATE TABLE IF NOT EXISTS tickets (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 type TEXT NOT NULL,
@@ -75,14 +89,11 @@ class BotDatabase {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 closed_at DATETIME,
                 closed_by TEXT,
-                close_reason TEXT,
-                FOREIGN KEY (user_id) REFERENCES user_sessions(user_id)
-            )
-        `);
-
-        // Bot Logs Table
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS bot_logs (
+                close_reason TEXT
+            )`,
+            
+            // Bot Logs Table
+            `CREATE TABLE IF NOT EXISTS bot_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 level TEXT NOT NULL,
                 message TEXT NOT NULL,
@@ -90,179 +101,266 @@ class BotDatabase {
                 action TEXT,
                 details TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        // Bot Configuration Table
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS bot_config (
+            )`,
+            
+            // Bot Configuration Table
+            `CREATE TABLE IF NOT EXISTS bot_config (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+            )`,
+            
+            // Application Cooldowns Table
+            `CREATE TABLE IF NOT EXISTS application_cooldowns (
+                user_id TEXT PRIMARY KEY,
+                last_application_date DATETIME NOT NULL,
+                application_type TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`
+        ];
+
+        for (const sql of tables) {
+            await this.run(sql);
+        }
     }
 
-    createIndexes() {
-        this.db.exec(`
-            CREATE INDEX IF NOT EXISTS idx_user_sessions_last_activity ON user_sessions(last_activity);
-            CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
-            CREATE INDEX IF NOT EXISTS idx_applications_type ON applications(type);
-            CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
-            CREATE INDEX IF NOT EXISTS idx_tickets_type ON tickets(type);
-            CREATE INDEX IF NOT EXISTS idx_bot_logs_level ON bot_logs(level);
-            CREATE INDEX IF NOT EXISTS idx_bot_logs_created_at ON bot_logs(created_at);
-        `);
+    async createIndexes() {
+        const indexes = [
+            'CREATE INDEX IF NOT EXISTS idx_user_sessions_last_activity ON user_sessions(last_activity)',
+            'CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status)',
+            'CREATE INDEX IF NOT EXISTS idx_applications_type ON applications(type)',
+            'CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)',
+            'CREATE INDEX IF NOT EXISTS idx_tickets_type ON tickets(type)',
+            'CREATE INDEX IF NOT EXISTS idx_bot_logs_level ON bot_logs(level)',
+            'CREATE INDEX IF NOT EXISTS idx_bot_logs_created_at ON bot_logs(created_at)'
+        ];
+
+        for (const sql of indexes) {
+            await this.run(sql);
+        }
+    }
+
+    // Helper methods for async operations
+    run(sql, params = []) {
+        return new Promise((resolve, reject) => {
+            this.db.run(sql, params, function(err) {
+                if (err) reject(err);
+                else resolve({ lastID: this.lastID, changes: this.changes });
+            });
+        });
+    }
+
+    get(sql, params = []) {
+        return new Promise((resolve, reject) => {
+            this.db.get(sql, params, (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+    }
+
+    all(sql, params = []) {
+        return new Promise((resolve, reject) => {
+            this.db.all(sql, params, (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
     }
 
     // Session Management
-    getUserSession(userId) {
-        const stmt = this.db.prepare('SELECT * FROM user_sessions WHERE user_id = ?');
-        return stmt.get(userId);
+    async getUserSession(userId) {
+        return await this.get('SELECT * FROM user_sessions WHERE user_id = ?', [userId]);
     }
 
-    updateUserSession(userId, menu, flow, question, answers) {
-        const stmt = this.db.prepare(`
-            INSERT OR REPLACE INTO user_sessions 
+    async updateUserSession(userId, menu, flow, question, answers) {
+        return await this.run(
+            `INSERT OR REPLACE INTO user_sessions 
             (user_id, current_menu, current_flow, current_question, answers, last_activity)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `);
-        return stmt.run(userId, menu, flow, question, JSON.stringify(answers));
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            [userId, menu, flow, question, JSON.stringify(answers)]
+        );
     }
 
-    clearUserSession(userId) {
-        const stmt = this.db.prepare('DELETE FROM user_sessions WHERE user_id = ?');
-        return stmt.run(userId);
+    async clearUserSession(userId) {
+        return await this.run('DELETE FROM user_sessions WHERE user_id = ?', [userId]);
     }
 
-    cleanOldSessions() {
-        const stmt = this.db.prepare(`
+    async cleanOldSessions() {
+        return await this.run(`
             DELETE FROM user_sessions 
             WHERE last_activity < datetime('now', '-24 hours')
         `);
-        return stmt.run();
     }
 
     // Application Management
-    createApplication(appId, userId, type, answers, forumPostId, forumChannelId) {
-        const stmt = this.db.prepare(`
-            INSERT INTO applications (id, user_id, type, answers, forum_post_id, forum_channel_id)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `);
-        return stmt.run(appId, userId, type, JSON.stringify(answers), forumPostId, forumChannelId);
+    async createApplication(appId, userId, type, answers, forumPostId, forumChannelId) {
+        return await this.run(
+            `INSERT INTO applications (id, user_id, type, answers, forum_post_id, forum_channel_id)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+            [appId, userId, type, JSON.stringify(answers), forumPostId, forumChannelId]
+        );
     }
 
-    updateApplicationStatus(appId, status, reviewedBy, reviewReason) {
-        const stmt = this.db.prepare(`
-            UPDATE applications 
+    async updateApplicationStatus(appId, status, reviewedBy, reviewReason) {
+        return await this.run(
+            `UPDATE applications 
             SET status = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, review_reason = ?
-            WHERE id = ?
-        `);
-        return stmt.run(status, reviewedBy, reviewReason, appId);
+            WHERE id = ?`,
+            [status, reviewedBy, reviewReason, appId]
+        );
     }
 
-    getApplicationsByStatus(status) {
-        const stmt = this.db.prepare(`
-            SELECT * FROM applications 
+    async getApplicationsByStatus(status) {
+        return await this.all(
+            `SELECT * FROM applications 
             WHERE status = ? 
-            ORDER BY submitted_at DESC
-        `);
-        return stmt.all(status);
+            ORDER BY submitted_at DESC`,
+            [status]
+        );
     }
 
-    getApplicationByPostId(postId) {
-        const stmt = this.db.prepare('SELECT * FROM applications WHERE forum_post_id = ?');
-        return stmt.get(postId);
+    async getApplicationByPostId(postId) {
+        return await this.get('SELECT * FROM applications WHERE forum_post_id = ?', [postId]);
+    }
+
+    // Application Cooldown Management
+    async getUserApplicationCooldown(userId) {
+        return await this.get('SELECT * FROM application_cooldowns WHERE user_id = ?', [userId]);
+    }
+
+    async setUserApplicationCooldown(userId, applicationType) {
+        return await this.run(
+            `INSERT OR REPLACE INTO application_cooldowns (user_id, last_application_date, application_type)
+            VALUES (?, CURRENT_TIMESTAMP, ?)`,
+            [userId, applicationType]
+        );
+    }
+
+    async removeUserApplicationCooldown(userId) {
+        return await this.run('DELETE FROM application_cooldowns WHERE user_id = ?', [userId]);
+    }
+
+    async isUserOnCooldown(userId, applicationType, cooldownDays = 14) {
+        const cooldown = await this.getUserApplicationCooldown(userId);
+        if (!cooldown || cooldown.application_type !== applicationType) {
+            return false;
+        }
+        
+        const cooldownDate = new Date(cooldown.last_application_date);
+        const now = new Date();
+        const daysDiff = (now - cooldownDate) / (1000 * 60 * 60 * 24);
+        
+        return daysDiff < cooldownDays;
     }
 
     // Ticket Management
-    createTicket(ticketId, userId, type, answers, channelId) {
-        const stmt = this.db.prepare(`
-            INSERT INTO tickets (id, user_id, type, answers, channel_id)
-            VALUES (?, ?, ?, ?, ?)
-        `);
-        return stmt.run(ticketId, userId, type, JSON.stringify(answers), channelId);
+    async createTicket(ticketId, userId, type, answers, channelId) {
+        return await this.run(
+            `INSERT INTO tickets (id, user_id, type, answers, channel_id)
+            VALUES (?, ?, ?, ?, ?)`,
+            [ticketId, userId, type, JSON.stringify(answers), channelId]
+        );
     }
 
-    closeTicket(ticketId, closedBy, closeReason) {
-        const stmt = this.db.prepare(`
-            UPDATE tickets 
+    async closeTicket(ticketId, closedBy, closeReason) {
+        return await this.run(
+            `UPDATE tickets 
             SET status = 'closed', closed_at = CURRENT_TIMESTAMP, closed_by = ?, close_reason = ?
-            WHERE id = ?
-        `);
-        return stmt.run(closedBy, closeReason, ticketId);
+            WHERE id = ?`,
+            [closedBy, closeReason, ticketId]
+        );
     }
 
-    getOpenTickets() {
-        const stmt = this.db.prepare(`
-            SELECT * FROM tickets 
+    async updateTicketStatus(ticketId, status, updatedBy, reason) {
+        return await this.run(
+            `UPDATE tickets 
+            SET status = ?, closed_at = ${status === 'closed' ? 'CURRENT_TIMESTAMP' : 'NULL'}, 
+                closed_by = ?, close_reason = ?
+            WHERE id = ?`,
+            [status, updatedBy, reason, ticketId]
+        );
+    }
+
+    async getOpenTickets() {
+        return await this.all(
+            `SELECT * FROM tickets 
             WHERE status = 'open' 
-            ORDER BY created_at DESC
-        `);
-        return stmt.all();
+            ORDER BY created_at DESC`
+        );
     }
 
-    getTicketByChannelId(channelId) {
-        const stmt = this.db.prepare('SELECT * FROM tickets WHERE channel_id = ?');
-        return stmt.get(channelId);
+    async getTicketByChannelId(channelId) {
+        return await this.get('SELECT * FROM tickets WHERE channel_id = ?', [channelId]);
+    }
+
+    async getTicketById(ticketId) {
+        return await this.get('SELECT * FROM tickets WHERE id = ?', [ticketId]);
     }
 
     // Configuration Management
-    getConfig(key) {
-        const stmt = this.db.prepare('SELECT value FROM bot_config WHERE key = ?');
-        const result = stmt.get(key);
-        return result ? result.value : null;
+    async getConfig(key) {
+        const result = await this.get('SELECT value FROM bot_config WHERE key = ?', [key]);
+        return result ? { value: result.value } : null;
     }
 
-    setConfig(key, value) {
-        const stmt = this.db.prepare(`
-            INSERT OR REPLACE INTO bot_config (key, value, updated_at)
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-        `);
-        return stmt.run(key, value);
+    async setConfig(key, value) {
+        return await this.run(
+            `INSERT OR REPLACE INTO bot_config (key, value, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)`,
+            [key, value]
+        );
     }
 
-    getAllConfig() {
-        const stmt = this.db.prepare('SELECT * FROM bot_config');
-        return stmt.all();
+    async getAllConfig() {
+        return await this.all('SELECT * FROM bot_config');
     }
 
     // Logging
-    insertBotLog(level, message, userId = null, action = null, details = null) {
-        const stmt = this.db.prepare(`
-            INSERT INTO bot_logs (level, message, user_id, action, details)
-            VALUES (?, ?, ?, ?, ?)
-        `);
-        return stmt.run(level, message, userId, action, details ? JSON.stringify(details) : null);
+    async insertBotLog(level, message, userId = null, action = null, details = null) {
+        return await this.run(
+            `INSERT INTO bot_logs (level, message, user_id, action, details)
+            VALUES (?, ?, ?, ?, ?)`,
+            [level, message, userId, action, details ? JSON.stringify(details) : null]
+        );
     }
 
-    getRecentLogs(limit = 100) {
-        const stmt = this.db.prepare(`
-            SELECT * FROM bot_logs 
+    async getRecentLogs(limit = 100) {
+        return await this.all(
+            `SELECT * FROM bot_logs 
             ORDER BY created_at DESC 
-            LIMIT ?
-        `);
-        return stmt.all(limit);
+            LIMIT ?`,
+            [limit]
+        );
     }
 
-    cleanOldLogs(days = 30) {
-        const stmt = this.db.prepare(`
-            DELETE FROM bot_logs 
-            WHERE created_at < datetime('now', '-${days} days')
-        `);
-        return stmt.run();
+    async cleanOldLogs(days = 30) {
+        return await this.run(
+            `DELETE FROM bot_logs 
+            WHERE created_at < datetime('now', '-${days} days')`
+        );
     }
 
     // Maintenance
-    vacuum() {
-        this.db.exec('VACUUM');
+    async vacuum() {
+        return await this.run('VACUUM');
     }
 
     async close() {
-        if (this.db) {
-            this.db.close();
-            console.log('Database connection closed');
-        }
+        return new Promise((resolve) => {
+            if (this.db) {
+                this.db.close((err) => {
+                    if (err) {
+                        console.error('Error closing database:', err);
+                    } else {
+                        console.log('Database connection closed');
+                    }
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
     }
 }
 
