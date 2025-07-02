@@ -50,7 +50,8 @@ const QA_FLOWS = {
             { key: 'warnedBy', question: 'Who warned you? (If known)' },
             { key: 'warnDate', question: 'When were you warned? (Date and approximate time)' },
             { key: 'warnReason', question: 'What was the reason given for your warning?' },
-            { key: 'appealReason', question: 'Why do you believe this warning should be removed? (Please provide a detailed explanation)' }
+            { key: 'appealReason', question: 'Why do you believe this warning should be removed? (Please provide a detailed explanation)' },
+            { key: 'hasEvidence', question: 'Do you have any evidence to support your appeal? (Yes/No)' }
         ],
         postType: 'ticket', // Will create a support ticket channel
         category: 'support-reports'
@@ -65,7 +66,8 @@ const QA_FLOWS = {
             { key: 'transactionId', question: 'What is your Stripe transaction ID or email?' },
             { key: 'donationItem', question: 'What did you donate for? (Package, rank, etc.)' },
             { key: 'donationDate', question: 'When did you make the donation? (Date and time)' },
-            { key: 'issue', question: 'What issue are you experiencing with your donation?' }
+            { key: 'issue', question: 'What issue are you experiencing with your donation?' },
+            { key: 'hasEvidence', question: 'Do you have evidence of your donation (receipt, screenshot, etc.)? (Yes/No)' }
         ],
         postType: 'ticket',
         category: 'support-reports'
@@ -79,7 +81,8 @@ const QA_FLOWS = {
             { key: 'steamId', question: 'What is your SteamID64?' },
             { key: 'issue', question: 'Please describe the issue you are experiencing in as much detail as possible.' },
             { key: 'when', question: 'When did this issue occur? (Date and time)' },
-            { key: 'steps', question: 'Have you tried any steps to resolve the issue? If so, what were they?' }
+            { key: 'steps', question: 'Have you tried any steps to resolve the issue? If so, what were they?' },
+            { key: 'hasEvidence', question: 'Do you have any screenshots or evidence of this issue? (Yes/No)' }
         ],
         postType: 'ticket',
         category: 'support-reports'
@@ -96,7 +99,8 @@ const QA_FLOWS = {
             { key: 'when', question: 'When did this incident occur? (Date and approximate time)' },
             { key: 'rules', question: 'What rule(s) did the player break? (Please be specific)' },
             { key: 'description', question: 'Please describe what happened in detail:' },
-            { key: 'witnesses', question: 'Were there any witnesses? If yes, who?' }
+            { key: 'witnesses', question: 'Were there any witnesses? If yes, who?' },
+            { key: 'hasEvidence', question: 'Do you have any evidence (screenshots, videos, etc.)? (Yes/No)' }
         ],
         postType: 'ticket',
         category: 'support-reports'
@@ -113,7 +117,8 @@ const QA_FLOWS = {
             { key: 'nature', question: 'What is the nature of your report? (e.g., abuse of power, unprofessional behavior, etc.)' },
             { key: 'description', question: 'Please describe what happened in detail:' },
             { key: 'witnesses', question: 'Were there any witnesses? If yes, who?' },
-            { key: 'directContact', question: 'Have you tried to resolve this issue with the staff member directly?' }
+            { key: 'directContact', question: 'Have you tried to resolve this issue with the staff member directly?' },
+            { key: 'hasEvidence', question: 'Do you have any evidence (screenshots, videos, etc.)? (Yes/No)' }
         ],
         postType: 'ticket',
         category: 'support-reports'
@@ -168,7 +173,7 @@ class QAFlowManager {
             }
         }
 
-        if (question.key.includes('confirmation') || question.key === 'directContact') {
+        if (question.key.includes('confirmation') || question.key === 'directContact' || question.key === 'hasEvidence') {
             const normalized = answer.toLowerCase().trim();
             if (!['yes', 'no', 'y', 'n'].includes(normalized)) {
                 return { valid: false, error: 'Please answer with Yes or No.' };
