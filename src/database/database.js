@@ -25,10 +25,10 @@ class BotDatabase {
                         return;
                     }
                     
-                    // Enable foreign keys
-                    this.db.run('PRAGMA foreign_keys = ON', (err) => {
+                    // Disable foreign keys to avoid constraint issues
+                    this.db.run('PRAGMA foreign_keys = OFF', (err) => {
                         if (err) {
-                            console.error('Failed to enable foreign keys:', err);
+                            console.error('Failed to disable foreign keys:', err);
                             reject(err);
                             return;
                         }
