@@ -25,8 +25,8 @@ class BotDatabase {
                         return;
                     }
                     
-                    // Enable foreign keys
-                    this.db.run('PRAGMA foreign_keys = ON', (err) => {
+                    // Disable foreign keys to prevent constraint issues
+                    this.db.run('PRAGMA foreign_keys = OFF', (err) => {
                         if (err) {
                             console.error('Failed to enable foreign keys:', err);
                             reject(err);
@@ -75,8 +75,7 @@ class BotDatabase {
                 submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 reviewed_by TEXT,
                 reviewed_at DATETIME,
-                review_reason TEXT,
-                FOREIGN KEY (user_id) REFERENCES user_sessions(user_id)
+                review_reason TEXT
             )`,
             
             // Support Tickets Table
@@ -90,8 +89,7 @@ class BotDatabase {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 closed_at DATETIME,
                 closed_by TEXT,
-                close_reason TEXT,
-                FOREIGN KEY (user_id) REFERENCES user_sessions(user_id)
+                close_reason TEXT
             )`,
             
             // Bot Logs Table
