@@ -25,10 +25,10 @@ class BotDatabase {
                         return;
                     }
                     
-                    // Disable foreign keys to avoid constraint issues
-                    this.db.run('PRAGMA foreign_keys = OFF', (err) => {
+                    // Enable foreign keys
+                    this.db.run('PRAGMA foreign_keys = ON', (err) => {
                         if (err) {
-                            console.error('Failed to disable foreign keys:', err);
+                            console.error('Failed to enable foreign keys:', err);
                             reject(err);
                             return;
                         }
@@ -75,7 +75,8 @@ class BotDatabase {
                 submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 reviewed_by TEXT,
                 reviewed_at DATETIME,
-                review_reason TEXT
+                review_reason TEXT,
+                FOREIGN KEY (user_id) REFERENCES user_sessions(user_id)
             )`,
             
             // Support Tickets Table
@@ -89,7 +90,8 @@ class BotDatabase {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 closed_at DATETIME,
                 closed_by TEXT,
-                close_reason TEXT
+                close_reason TEXT,
+                FOREIGN KEY (user_id) REFERENCES user_sessions(user_id)
             )`,
             
             // Bot Logs Table
@@ -108,14 +110,6 @@ class BotDatabase {
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`,
-            
-            // Application Cooldowns Table
-            `CREATE TABLE IF NOT EXISTS application_cooldowns (
-                user_id TEXT PRIMARY KEY,
-                last_application_date DATETIME NOT NULL,
-                application_type TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )`
         ];
 
@@ -224,36 +218,6 @@ class BotDatabase {
         return await this.get('SELECT * FROM applications WHERE forum_post_id = ?', [postId]);
     }
 
-    // Application Cooldown Management
-    async getUserApplicationCooldown(userId) {
-        return await this.get('SELECT * FROM application_cooldowns WHERE user_id = ?', [userId]);
-    }
-
-    async setUserApplicationCooldown(userId, applicationType) {
-        return await this.run(
-            `INSERT OR REPLACE INTO application_cooldowns (user_id, last_application_date, application_type)
-            VALUES (?, CURRENT_TIMESTAMP, ?)`,
-            [userId, applicationType]
-        );
-    }
-
-    async removeUserApplicationCooldown(userId) {
-        return await this.run('DELETE FROM application_cooldowns WHERE user_id = ?', [userId]);
-    }
-
-    async isUserOnCooldown(userId, applicationType, cooldownDays = 14) {
-        const cooldown = await this.getUserApplicationCooldown(userId);
-        if (!cooldown || cooldown.application_type !== applicationType) {
-            return false;
-        }
-        
-        const cooldownDate = new Date(cooldown.last_application_date);
-        const now = new Date();
-        const daysDiff = (now - cooldownDate) / (1000 * 60 * 60 * 24);
-        
-        return daysDiff < cooldownDays;
-    }
-
     // Ticket Management
     async createTicket(ticketId, userId, type, answers, channelId) {
         return await this.run(
@@ -292,10 +256,6 @@ class BotDatabase {
 
     async getTicketByChannelId(channelId) {
         return await this.get('SELECT * FROM tickets WHERE channel_id = ?', [channelId]);
-    }
-
-    async getTicketById(ticketId) {
-        return await this.get('SELECT * FROM tickets WHERE id = ?', [ticketId]);
     }
 
     // Configuration Management
