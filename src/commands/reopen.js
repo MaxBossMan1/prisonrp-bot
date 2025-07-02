@@ -16,8 +16,8 @@ module.exports = {
         
         try {
             // Check if user has staff permissions
-            const staffRoleId = database.getConfig('staff_role_id')?.value;
-            const adminRoleId = database.getConfig('admin_role_id')?.value;
+            const staffRoleId = (await database.getConfig('staff_role_id'))?.value;
+            const adminRoleId = (await database.getConfig('admin_role_id'))?.value;
             
             const hasStaffRole = staffRoleId && interaction.member.roles.cache.has(staffRoleId);
             const hasAdminRole = adminRoleId && interaction.member.roles.cache.has(adminRoleId);
@@ -38,11 +38,11 @@ module.exports = {
             // Check if this is a forum post (application/appeal)
             if (interaction.channel.isThread() && interaction.channel.parent?.type === 15) {
                 const postId = interaction.channel.id;
-                const application = database.getApplicationByPostId(postId);
+                const application = await database.getApplicationByPostId(postId);
                 
                 if (application && (application.status === 'accepted' || application.status === 'denied')) {
                     // Update application status
-                    database.updateApplicationStatus(application.id, 'unreviewed', interaction.user.id, reason);
+                    await database.updateApplicationStatus(application.id, 'unreviewed', interaction.user.id, reason);
                     
                     // Update forum post tags
                     const underReviewTag = await this.findOrCreateTag(interaction.channel.parent, 'Under Review', '🔄');
@@ -86,7 +86,7 @@ module.exports = {
                     }
                     
                     // Log the action
-                    database.insertBotLog(
+                    await database.insertBotLog(
                         'info', 
                         `Application reopened by ${interaction.user.username}`, 
                         application.user_id, 
@@ -103,11 +103,11 @@ module.exports = {
             // Check if this is a support ticket channel
             if (!success) {
                 const channelId = interaction.channel.id;
-                const ticket = database.getTicketByChannelId(channelId);
+                const ticket = await database.getTicketByChannelId(channelId);
                 
                 if (ticket && ticket.status === 'closed') {
                     // Reopen ticket (update status)
-                    database.updateTicketStatus(ticket.id, 'open', interaction.user.id, reason);
+                    await database.updateTicketStatus(ticket.id, 'open', interaction.user.id, reason);
                     
                     success = true;
                     type = ticket.type;
@@ -134,7 +134,7 @@ module.exports = {
                     }
                     
                     // Log the action
-                    database.insertBotLog(
+                    await database.insertBotLog(
                         'info', 
                         `Support ticket reopened by ${interaction.user.username}`, 
                         ticket.user_id, 

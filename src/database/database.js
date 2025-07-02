@@ -218,6 +218,40 @@ class BotDatabase {
         return await this.get('SELECT * FROM applications WHERE forum_post_id = ?', [postId]);
     }
 
+    // Application Cooldown Management
+    async getUserApplicationCooldown(userId) {
+        return await this.get('SELECT * FROM application_cooldowns WHERE user_id = ?', [userId]);
+    }
+
+    async setUserApplicationCooldown(userId, applicationType) {
+        return await this.run(
+            `INSERT OR REPLACE INTO application_cooldowns (user_id, last_application_date, application_type)
+            VALUES (?, CURRENT_TIMESTAMP, ?)`,
+            [userId, applicationType]
+        );
+    }
+
+    async removeUserApplicationCooldown(userId) {
+        return await this.run('DELETE FROM application_cooldowns WHERE user_id = ?', [userId]);
+    }
+
+    async isUserOnCooldown(userId, applicationType, cooldownDays = 14) {
+        const cooldown = await this.getUserApplicationCooldown(userId);
+        if (!cooldown) {
+            return false;
+        }
+
+        const lastApplicationDate = new Date(cooldown.last_application_date);
+        const now = new Date();
+        const daysSinceLastApplication = (now - lastApplicationDate) / (1000 * 60 * 60 * 24);
+
+        return daysSinceLastApplication < cooldownDays;
+    }
+
+    async getTicketById(ticketId) {
+        return await this.get('SELECT * FROM tickets WHERE id = ?', [ticketId]);
+    }
+
     // Ticket Management
     async createTicket(ticketId, userId, type, answers, channelId) {
         return await this.run(

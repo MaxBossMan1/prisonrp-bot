@@ -9,7 +9,7 @@ module.exports = {
         const database = bot.getDatabase();
         
         // Check if bot is configured
-        const config = database.getAllConfig();
+        const config = await database.getAllConfig();
         const isConfigured = config.length > 0;
         
         const embed = new EmbedBuilder()
