@@ -1,0 +1,31 @@
+{
+  "name": "digitaldeltagaming-prisonrp-bot",
+  "version": "1.0.0",
+  "description": "Custom Discord bot for DigitalDeltaGaming PrisonRP server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "deploy": "node deploy-commands.js",
+    "test": "node test-bot.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "prisonrp",
+    "gmod"
+  ],
+  "author": "DigitalDeltaGaming",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "better-sqlite3": "^9.2.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
