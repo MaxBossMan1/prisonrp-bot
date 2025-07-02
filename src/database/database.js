@@ -110,6 +110,14 @@ class BotDatabase {
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`,
+            
+            // Application Cooldowns Table
+            `CREATE TABLE IF NOT EXISTS application_cooldowns (
+                user_id TEXT PRIMARY KEY,
+                last_application_date DATETIME NOT NULL,
+                application_type TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )`
         ];
 
@@ -126,7 +134,8 @@ class BotDatabase {
             'CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)',
             'CREATE INDEX IF NOT EXISTS idx_tickets_type ON tickets(type)',
             'CREATE INDEX IF NOT EXISTS idx_bot_logs_level ON bot_logs(level)',
-            'CREATE INDEX IF NOT EXISTS idx_bot_logs_created_at ON bot_logs(created_at)'
+            'CREATE INDEX IF NOT EXISTS idx_bot_logs_created_at ON bot_logs(created_at)',
+            'CREATE INDEX IF NOT EXISTS idx_application_cooldowns_user_id ON application_cooldowns(user_id)'
         ];
 
         for (const sql of indexes) {
