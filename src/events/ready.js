@@ -10,8 +10,7 @@ module.exports = {
         logger.info(`Bot is ready! Logged in as ${client.user.tag}`);
         logger.info(`Bot is in ${client.guilds.cache.size} guilds`);
         
-        // Set bot status
-        client.user.setActivity('DM me for support!', { type: 'WATCHING' });
+        // Remove bot status - no activity set
         
         // Clean old sessions and logs on startup
         try {

@@ -507,7 +507,7 @@ class MenuHandler {
                 throw new Error('Support category not found');
             }
 
-            // Create the support ticket channel
+            // Create the support ticket channel (hidden from ticket creator)
             const ticketChannel = await category.guild.channels.create({
                 name: `${submission.type}-${message.author.username}`,
                 type: 0, // Text Channel
@@ -518,8 +518,8 @@ class MenuHandler {
                         deny: ['ViewChannel']
                     },
                     {
-                        id: message.author.id, // User
-                        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+                        id: message.author.id, // User - DENY access, they communicate via DM only
+                        deny: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
                     },
                     {
                         id: (await this.database.getConfig('staff_role_id'))?.value, // Staff
@@ -528,7 +528,7 @@ class MenuHandler {
                 ].filter(override => override.id) // Remove any null/undefined IDs
             });
 
-            // Send initial message in ticket
+            // Send initial message in ticket (for staff only - user can't see this channel)
             const embed = this.createSubmissionEmbed(submission, message.author);
             embed.setTitle(`🎫 ${submission.title}`);
             
@@ -536,7 +536,10 @@ class MenuHandler {
             const staffRoleConfig = await this.database.getConfig('staff_role_id');
             const staffRoleId = staffRoleConfig?.value;
             
-            let content = `<@${message.author.id}> Your support ticket has been created! Staff will assist you shortly.`;
+            let content = `**New Support Ticket Created**\n`;
+            content += `**User:** ${message.author.username} (${message.author.id})\n`;
+            content += `**Type:** ${submission.type}\n\n`;
+            content += `*Note: User cannot see this channel. Use \`/ticket-message\` to communicate with them via DM.*`;
             
             // Add staff ping if configured
             if (staffRoleId) {
