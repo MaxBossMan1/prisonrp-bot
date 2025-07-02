@@ -5,7 +5,7 @@ const QA_FLOWS = {
         title: 'Staff Application',
         questions: [
             { key: 'inGameName', question: 'What is your in-game name?' },
-            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username#1234)' },
+            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username)' },
             { key: 'age', question: 'How old are you?' },
             { key: 'steamId', question: 'What is your SteamID64? (You can find this at https://steamid.io/)' },
             { key: 'timezone', question: 'What is your timezone and country?' },
@@ -28,7 +28,7 @@ const QA_FLOWS = {
         title: 'Ban Appeal',
         questions: [
             { key: 'inGameName', question: 'What is your in-game name?' },
-            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username#1234)' },
+            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username)' },
             { key: 'steamId', question: 'What is your SteamID64? (You can find this at https://steamid.io/)' },
             { key: 'bannedBy', question: 'Who banned you? (If known)' },
             { key: 'banDate', question: 'When were you banned? (Date and approximate time)' },
@@ -45,7 +45,7 @@ const QA_FLOWS = {
         title: 'Warn Appeal',
         questions: [
             { key: 'inGameName', question: 'What is your in-game name?' },
-            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username#1234)' },
+            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username)' },
             { key: 'steamId', question: 'What is your SteamID64?' },
             { key: 'warnedBy', question: 'Who warned you? (If known)' },
             { key: 'warnDate', question: 'When were you warned? (Date and approximate time)' },
@@ -61,7 +61,7 @@ const QA_FLOWS = {
         title: 'Donation Support',
         questions: [
             { key: 'inGameName', question: 'What is your in-game name?' },
-            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username#1234)' },
+            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username)' },
             { key: 'steamId', question: 'What is your SteamID64?' },
             { key: 'transactionId', question: 'What is your Stripe transaction ID or email?' },
             { key: 'donationItem', question: 'What did you donate for? (Package, rank, etc.)' },
@@ -77,7 +77,7 @@ const QA_FLOWS = {
         title: 'General Support',
         questions: [
             { key: 'inGameName', question: 'What is your in-game name?' },
-            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username#1234)' },
+            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username)' },
             { key: 'steamId', question: 'What is your SteamID64?' },
             { key: 'issue', question: 'Please describe the issue you are experiencing in as much detail as possible.' },
             { key: 'when', question: 'When did this issue occur? (Date and time)' },
@@ -92,7 +92,7 @@ const QA_FLOWS = {
         title: 'Player Report',
         questions: [
             { key: 'inGameName', question: 'What is your in-game name?' },
-            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username#1234)' },
+            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username)' },
             { key: 'steamId', question: 'What is your SteamID64?' },
             { key: 'reportedPlayer', question: 'Who are you reporting? (Player\'s in-game name)' },
             { key: 'reportedSteamId', question: 'What is the reported player\'s SteamID64? (If known)' },
@@ -111,7 +111,7 @@ const QA_FLOWS = {
         title: 'Staff Report',
         questions: [
             { key: 'inGameName', question: 'What is your in-game name?' },
-            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username#1234)' },
+            { key: 'discordUsername', question: 'What is your Discord username? (e.g., username)' },
             { key: 'steamId', question: 'What is your SteamID64?' },
             { key: 'reportedStaff', question: 'Who are you reporting? (Staff member\'s name/rank)' },
             { key: 'when', question: 'When did this incident occur? (Date and approximate time)' },
