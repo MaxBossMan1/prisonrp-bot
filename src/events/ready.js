@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events, ActivityType } = require('discord.js');
 
 module.exports = {
     name: Events.ClientReady,
@@ -11,7 +11,7 @@ module.exports = {
         logger.info(`Bot is in ${client.guilds.cache.size} guilds`);
         
         // Set bot status
-        client.user.setActivity('DM me for support!', { type: 'WATCHING' });
+        client.user.setActivity('DMs for support', { type: ActivityType.Watching });
         
         // Clean old sessions and logs on startup
         try {
