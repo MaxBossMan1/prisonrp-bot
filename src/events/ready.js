@@ -11,13 +11,7 @@ module.exports = {
         logger.info(`Bot is in ${client.guilds.cache.size} guilds`);
         
         // Set bot status
-        client.user.setPresence({
-            activities: [{
-                name: 'DMs for support',
-                type: 3 // ActivityType.Watching
-            }],
-            status: 'online'
-        });
+        client.user.setActivity('DM me for support!', { type: 'WATCHING' });
         
         // Clean old sessions and logs on startup
         try {
