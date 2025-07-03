@@ -15,20 +15,27 @@ class MenuHandler {
                 title: 'DigitalDeltaGaming PrisonRP Support',
                 options: [
                     { number: 1, name: 'Support', value: 'support' },
-                    { number: 2, name: 'Staff Applications', value: 'staff-applications' },
-                    { number: 3, name: 'Reports', value: 'reports' },
-                    { number: 4, name: 'Help', value: 'help' },
-                    { number: 5, name: 'Cancel/Exit', value: 'cancel' }
+                    { number: 2, name: 'Appeals', value: 'appeals' },
+                    { number: 3, name: 'Staff Applications', value: 'staff-applications' },
+                    { number: 4, name: 'Reports', value: 'reports' },
+                    { number: 5, name: 'Help', value: 'help' },
+                    { number: 6, name: 'Cancel/Exit', value: 'cancel' }
                 ]
             },
             support: {
                 title: 'Support Menu',
                 options: [
-                    { number: 1, name: 'Warn Appeal', value: 'warn-appeal' },
-                    { number: 2, name: 'Ban Appeal', value: 'ban-appeal' },
-                    { number: 3, name: 'Donation Support', value: 'donation-support' },
-                    { number: 4, name: 'General Support', value: 'general-support' },
-                    { number: 5, name: 'Back', value: 'main' }
+                    { number: 1, name: 'Donation Support', value: 'donation-support' },
+                    { number: 2, name: 'General Support', value: 'general-support' },
+                    { number: 3, name: 'Back', value: 'main' }
+                ]
+            },
+            appeals: {
+                title: 'Appeals Menu',
+                options: [
+                    { number: 1, name: 'Ban Appeal', value: 'ban-appeal' },
+                    { number: 2, name: 'Warn Appeal', value: 'warn-appeal' },
+                    { number: 3, name: 'Back', value: 'main' }
                 ]
             },
             'staff-applications': {
@@ -96,26 +103,26 @@ class MenuHandler {
         }
 
         try {
-            // Update session
+        // Update session
             await this.database.updateUserSession(message.author.id, menuKey, 'menu', 0, {});
             this.logger.debug(`Updated session for user ${message.author.username}`);
 
-            // Create embed
-            const embed = new EmbedBuilder()
-                .setTitle(menu.title)
-                .setColor(0x0099FF)
-                .setDescription('Please choose an option:')
-                .setFooter({ text: 'Type the number or name of your choice' });
+        // Create embed
+        const embed = new EmbedBuilder()
+            .setTitle(menu.title)
+            .setColor(0x0099FF)
+            .setDescription('Please choose an option:')
+            .setFooter({ text: 'Type the number or name of your choice' });
 
-            // Add options
-            let optionsText = '';
-            for (const option of menu.options) {
-                optionsText += `${option.number}. ${option.name}\n`;
-            }
-            embed.addFields({ name: 'Options', value: optionsText });
+        // Add options
+        let optionsText = '';
+        for (const option of menu.options) {
+            optionsText += `${option.number}. ${option.name}\n`;
+        }
+        embed.addFields({ name: 'Options', value: optionsText });
 
             this.logger.debug(`Sending menu embed to user ${message.author.username}`);
-            await message.reply({ embeds: [embed] });
+        await message.reply({ embeds: [embed] });
             this.logger.info(`Successfully sent menu to user ${message.author.username}`);
         } catch (error) {
             this.logger.error(`Error showing menu to user ${message.author.username}:`, error);
@@ -169,6 +176,7 @@ class MenuHandler {
         switch (selection) {
             case 'main':
             case 'support':
+            case 'appeals':
             case 'staff-applications':
             case 'reports':
                 await this.showMenu(message, selection);
@@ -299,14 +307,14 @@ class MenuHandler {
             }
         } else {
             // Regular text answer validation
-            const validation = this.qaFlowManager.validateAnswer(flowType, currentQuestion - 1, content);
-            if (!validation.valid) {
-                await message.reply(`❌ ${validation.error}\n\nPlease try again:`);
-                return;
-            }
-            
-            // Store the answer
-            answers[currentQuestion - 1] = content;
+        const validation = this.qaFlowManager.validateAnswer(flowType, currentQuestion - 1, content);
+        if (!validation.valid) {
+            await message.reply(`❌ ${validation.error}\n\nPlease try again:`);
+            return;
+        }
+
+        // Store the answer
+        answers[currentQuestion - 1] = content;
         }
 
         // Check if flow is complete
@@ -459,13 +467,13 @@ class MenuHandler {
             const channelId = channelConfig?.value;
             
             await this.database.createApplication(
-                submissionId,
-                message.author.id,
-                submission.type,
+            submissionId,
+            message.author.id,
+            submission.type,
                 typeof submission.answers === 'string' ? submission.answers : JSON.stringify(submission.answers),
                 null,
-                channelId
-            );
+            channelId
+        );
 
             throw error;
         }
@@ -567,12 +575,12 @@ class MenuHandler {
             
             // Fallback: Store in database without channel
             await this.database.createTicket(
-                submissionId,
-                message.author.id,
-                submission.type,
+            submissionId,
+            message.author.id,
+            submission.type,
                 typeof submission.answers === 'string' ? submission.answers : JSON.stringify(submission.answers),
                 null
-            );
+        );
 
             throw error;
         }

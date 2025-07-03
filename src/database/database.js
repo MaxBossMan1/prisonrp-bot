@@ -10,14 +10,14 @@ class BotDatabase {
 
     async init() {
         return new Promise((resolve, reject) => {
-            try {
-                // Ensure data directory exists
-                const dir = path.dirname(this.dbPath);
-                if (!fs.existsSync(dir)) {
-                    fs.mkdirSync(dir, { recursive: true });
-                }
+        try {
+            // Ensure data directory exists
+            const dir = path.dirname(this.dbPath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
 
-                // Initialize database
+            // Initialize database
                 this.db = new sqlite3.Database(this.dbPath, (err) => {
                     if (err) {
                         console.error('Failed to connect to database:', err);
@@ -32,27 +32,27 @@ class BotDatabase {
                             reject(err);
                             return;
                         }
-                        
-                        // Create tables
+            
+            // Create tables
                         this.createTables()
                             .then(() => this.createIndexes())
                             .then(() => {
-                                console.log('Database initialized successfully');
+            console.log('Database initialized successfully');
                                 resolve();
                             })
                             .catch(reject);
                     });
                 });
-            } catch (error) {
-                console.error('Failed to initialize database:', error);
+        } catch (error) {
+            console.error('Failed to initialize database:', error);
                 reject(error);
-            }
+        }
         });
     }
 
     async createTables() {
         const tables = [
-            // User Sessions Table
+        // User Sessions Table
             `CREATE TABLE IF NOT EXISTS user_sessions (
                 user_id TEXT PRIMARY KEY,
                 current_menu TEXT DEFAULT 'main',
@@ -62,8 +62,8 @@ class BotDatabase {
                 last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )`,
-            
-            // Applications Table
+
+        // Applications Table
             `CREATE TABLE IF NOT EXISTS applications (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -77,8 +77,8 @@ class BotDatabase {
                 reviewed_at DATETIME,
                 review_reason TEXT
             )`,
-            
-            // Support Tickets Table
+
+        // Support Tickets Table
             `CREATE TABLE IF NOT EXISTS tickets (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -91,8 +91,8 @@ class BotDatabase {
                 closed_by TEXT,
                 close_reason TEXT
             )`,
-            
-            // Bot Logs Table
+
+        // Bot Logs Table
             `CREATE TABLE IF NOT EXISTS bot_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 level TEXT NOT NULL,
@@ -102,8 +102,8 @@ class BotDatabase {
                 details TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )`,
-            
-            // Bot Configuration Table
+
+        // Bot Configuration Table
             `CREATE TABLE IF NOT EXISTS bot_config (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
@@ -121,7 +121,7 @@ class BotDatabase {
 
         for (const sql of tables) {
             await this.run(sql);
-        }
+    }
     }
 
     async createIndexes() {
@@ -349,13 +349,13 @@ class BotDatabase {
 
     async close() {
         return new Promise((resolve) => {
-            if (this.db) {
+        if (this.db) {
                 this.db.close((err) => {
                     if (err) {
                         console.error('Error closing database:', err);
                     } else {
-                        console.log('Database connection closed');
-                    }
+            console.log('Database connection closed');
+        }
                     resolve();
                 });
             } else {

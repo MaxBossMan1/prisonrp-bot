@@ -5,7 +5,7 @@ module.exports = {
     async execute(interaction, bot) {
         const logger = bot.getLogger();
         const database = bot.getDatabase();
-        
+
         if (!interaction.isChatInputCommand()) return;
 
         const command = bot.commands.get(interaction.commandName);
@@ -25,7 +25,7 @@ module.exports = {
                 interaction.user.id, 
                 'command_executed',
                 { 
-                    commandName: interaction.commandName,
+                commandName: interaction.commandName,
                     guildId: interaction.guild?.id,
                     channelId: interaction.channel?.id
                 }

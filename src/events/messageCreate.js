@@ -64,7 +64,7 @@ module.exports = {
             }
         }
     }
-};
+}; 
 
 async function handleTicketReply(message, openTickets, bot) {
     const logger = bot.getLogger();
