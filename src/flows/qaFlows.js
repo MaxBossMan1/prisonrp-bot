@@ -13,6 +13,7 @@ const QA_FLOWS = {
             { key: 'activeTimes', question: 'What times are you most active on the server? (Please be specific, e.g., "Weekdays 4 PM - 9 PM EST, weekends vary")' },
             { key: 'previousBans', question: 'Have you ever been warned, kicked, or banned on our server? If so, please explain the situation. (Honesty is critical here. We will check your record.)' },
             { key: 'experience', question: 'Do you have any previous experience as a staff member on a GMod server (or any other game)? If yes, please detail:\n- Server Name & Gamemode:\n- Your Rank:\n- How long you were staff:\n- Reason for leaving:' },
+            { key: 'referral', question: 'Were you referred by another staff member? If yes, please provide their name.' },
             { key: 'motivation', question: 'Why do you want to be a staff member on this server specifically? (Do not say "to help people" or "to ban rulebreakers." Be detailed, 2 sentences at least.)' },
             { key: 'qualities', question: 'What qualities do you possess that would make you a good staff member?' },
             { key: 'roleUnderstanding', question: 'In your own words, what is the primary role of a staff member in a PrisonRP environment?' },
@@ -201,4 +202,4 @@ class QAFlowManager {
     }
 }
 
-module.exports = { QAFlowManager, QA_FLOWS }; 
+module.exports = { QAFlowManager, QA_FLOWS };
