@@ -429,22 +429,27 @@ class MenuHandler {
                 throw new Error('Forum channel not found');
             }
 
-            let content;
-            if (submission.type === 'staff-application' || submission.type === 'ban-appeal') {
-                // Use plain text format for staff applications and ban appeals
-                content = this.createPlainTextSubmission(submission, message.author);
-            } else {
-                // Use embed format for other applications
-                content = { embeds: [this.createSubmissionEmbed(submission, message.author)] };
+            let content = this.createPlainTextSubmission(submission, message.author);
+
+            // Split content into chunks of 2000 chars or less
+            const chunks = [];
+            while (content.length > 0) {
+                chunks.push(content.slice(0, 2000));
+                content = content.slice(2000);
             }
 
-            // Create the forum post
+            // Create the forum post with first chunk
             const thread = await forumChannel.threads.create({
                 name: `${submission.title} - ${message.author.username}`,
-                message: typeof content === 'string' ? { content } : content,
+                message: { content: chunks[0] },
                 appliedTags: await this.getApplicableTags(forumChannel, 'Unreviewed')
             });
 
+            // Send remaining chunks as replies
+            for (let i = 1; i < chunks.length; i++) {
+                await thread.send({ content: chunks[i] });
+            }
+            
             // Store in database with forum post ID
             await this.database.createApplication(
                 submissionId,
@@ -683,4 +688,4 @@ class MenuHandler {
     }
 }
 
-module.exports = MenuHandler; 
+module.exports = MenuHandler;

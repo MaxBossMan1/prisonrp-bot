@@ -34,5 +34,18 @@ module.exports = {
             guilds: client.guilds.cache.size,
             users: client.users.cache.size
         });
+
+        // Set up periodic session cleanup every 24 hours
+        setInterval(async () => {
+            try {
+                const sessionsDeleted = await database.cleanOldSessions();
+                if (sessionsDeleted.changes > 0) {
+                    logger.info(`Periodic cleanup: Cleaned ${sessionsDeleted.changes} old sessions`);
+                }
+            } catch (error) {
+                logger.error('Error during periodic session cleanup:', error);
+            }
+        }, 24 * 60 * 60 * 1000);
+
     }
-}; 
+};
