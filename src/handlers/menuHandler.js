@@ -429,22 +429,49 @@ class MenuHandler {
                 throw new Error('Forum channel not found');
             }
 
-            let content = this.createPlainTextSubmission(submission, message.author);
-
-            // Split content into chunks of 2000 chars or less
-            const chunks = [];
-            while (content.length > 0) {
-                chunks.push(content.slice(0, 2000));
-                content = content.slice(2000);
+            const answers = typeof submission.answers === 'string' 
+                ? JSON.parse(submission.answers) 
+                : submission.answers;
+            
+            const flow = this.qaFlowManager.getFlow(submission.type);
+            
+            let header = `**${submission.title}**\n`;
+            header += `**Submitted by:** ${message.author.username} (${message.author.id})\n`;
+            header += `**Submitted on:** <t:${Math.floor(Date.now() / 1000)}:F>\n\n`;
+            
+            const chunks = [header];
+            let currentChunk = chunks[0];
+            
+            if (flow && flow.questions) {
+                for (let i = 0; i < flow.questions.length; i++) {
+                    const question = flow.questions[i];
+                    const answer = answers[question.key] || 'No answer provided';
+                    const qaPair = `**${question.question}**\n${answer}\n\n`;
+                    
+                    if (currentChunk.length + qaPair.length > 2000) {
+                        if (currentChunk === header) {
+                            // If even first pair doesn't fit, we'll have to send header separately or handle differently
+                            currentChunk = qaPair;
+                            chunks[0] = header;
+                            chunks.push(currentChunk);
+                        } else {
+                            chunks.push(qaPair);
+                            currentChunk = chunks[chunks.length - 1];
+                        }
+                    } else {
+                        currentChunk += qaPair;
+                        chunks[chunks.length - 1] = currentChunk;
+                    }
+                }
             }
-
+            
             // Create the forum post with first chunk
             const thread = await forumChannel.threads.create({
                 name: `${submission.title} - ${message.author.username}`,
                 message: { content: chunks[0] },
                 appliedTags: await this.getApplicableTags(forumChannel, 'Unreviewed')
             });
-
+        
             // Send remaining chunks as replies
             for (let i = 1; i < chunks.length; i++) {
                 await thread.send({ content: chunks[i] });
@@ -459,9 +486,9 @@ class MenuHandler {
                 thread.id,
                 forumChannelId
             );
-
+        
             this.logger.info(`Forum post created: ${thread.id} for user ${message.author.id}`);
-
+        
         } catch (error) {
             this.logger.error('Error creating forum post:', error);
             
@@ -472,37 +499,48 @@ class MenuHandler {
             const channelId = channelConfig?.value;
             
             await this.database.createApplication(
-            submissionId,
-            message.author.id,
-            submission.type,
+                submissionId,
+                message.author.id,
+                submission.type,
                 typeof submission.answers === 'string' ? submission.answers : JSON.stringify(submission.answers),
                 null,
-            channelId
-        );
-
+                channelId
+            );
+        
             throw error;
         }
     }
 
     createPlainTextSubmission(submission, user) {
+        const embed = new EmbedBuilder()
+            .setTitle(submission.title)
+            .setColor(0x0099FF)
+            .setAuthor({ 
+                name: user.username, 
+                iconURL: user.displayAvatarURL() 
+            })
+            .setTimestamp()
+            .setFooter({ text: `Submitted by ${user.username}` });
+
+        // Add answers as fields
         const answers = typeof submission.answers === 'string' 
             ? JSON.parse(submission.answers) 
             : submission.answers;
         
         const flow = this.qaFlowManager.getFlow(submission.type);
         
-        let content = `**${submission.title}**\n`;
-        content += `**Submitted by:** ${user.username} (${user.id})\n`;
-        content += `**Submitted on:** <t:${Math.floor(Date.now() / 1000)}:F>\n\n`;
-        
         if (flow && flow.questions) {
-            flow.questions.forEach((question) => {
+            flow.questions.forEach((question, index) => {
                 const answer = answers[question.key] || 'No answer provided';
-                content += `**${question.question}**\n${answer}\n\n`;
+                embed.addFields({
+                    name: question.question,
+                    value: answer.length > 1024 ? answer.substring(0, 1021) + '...' : answer,
+                    inline: false
+                });
             });
         }
-        
-        return content;
+
+        return embed;
     }
 
     async createSupportTicket(message, submissionId, submission) {
